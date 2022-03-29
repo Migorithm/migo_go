@@ -38,3 +38,116 @@ So essentially by putting underscore you're saying that "I don't care about the 
 
 
 ## What if you want to look for a single key press(like esc button)
+You can do that in Go, but it's not as easy as in C# or C.<br>
+So instead of writing hundred lines of code, let's use a third-party package from the following link<br>
+
+	https://github.com/eiannone/keyboard
+
+
+### go get it 
+The way you install go package is different from the way you do in Python or Java.<br>
+**Installation:**
+
+	go get -u github.com/eiannone/keyboard
+
+By now, you will see go.sum is there in the project directory, the contents of which you don't want to fiddle with. And more notably,<br>
+go.mod:
+```plain
+module myapp
+
+go 1.18
+
+require (
+	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807 // indirect
+	golang.org/x/sys v0.0.0-20220329152356-43be30ef3008 // indirect
+)
+```
+
+### use of third-party module
+
+```go
+
+package main
+
+import (
+	"fmt"
+	"log"
+	"github.com/eiannone/keyboard"
+)
+func main() {
+	err := keyboard.Open() //1
+	if err != nil {  //2
+		log.Fatal(err) //3
+	}
+	defer func(){  //4 
+		_ = keyboard.Close() //5
+	}()  
+
+	fmt.Println("Press any key on the keyboard. Press ESC to quit.")
+
+	for {
+		char, key, err := keyboard.GetSingleKey() //6
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if key != 0 {
+			fmt.Println("You pressed", char, key) //7
+		} else {
+			fmt.Println("You pressed", char)
+		}
+
+		if key == keyboard.KeyEsc { //8
+			break
+		}
+
+	}
+	fmt.Println("Program exiting...")
+}
+```
+2. nil is equal to None in Python
+
+3. built-in log function
+
+4. whatever follows the **defer** keyword won't execute immediately. Instead, it will execute as soon as the current function(main function) ends. Plus, this is the way you define anonymous function. Instead of using a "finally" block, we use the "defer" statement in Go. When we use "defer", the statement will run just before the function exits. The good thing about this is that we can put a "defer" almost anywhere in the code.
+
+5. as soon as the main function finishes, it will close the keyboard. It might throw an error, but we ignore it. 
+
+6. If you get your mouse hovering over GetSingleKey, you will see the return types are Rune, keyboard.key and err. Rune literals are just 32-bit integer values. For example, the rune literal 'a' is actually the number 97.
+
+7. When you pressed Esc, return(enter) and so on, the key is not 0.
+
+8. keyboard.KeyEsc will detect enter key. 
+
+
+#### About defer keyword
+What if there is more than one "defer" in a function? Well, they all run, but they run in the **reverse order** that they are declared. Here's an example:
+
+```go
+  func main() {
+    defer fmt.Println("Goodbye")
+    defer fmt.Println("Farewell")
+    fmt.Println("Hello, World!")
+  }
+```
+And here's the output:
+	Hello, World!
+	Farewell
+	Goodbye
+
+
+#### What about then error handling? 
+Go has a different philosophy toward error handling.<br>
+In Go, there are no "try / catch" blocks. <br>
+Instead, there are errors that CAN be dealt with (an "error" returned from a function)<br> 
+and errors that CANNOT be dealt with (a "panic" in Go).
+
+
+#### "defer" and "panic" 
+The reason this is important to us is that we need to know what happens to deferred items when a panic happens.<br>
+The good news is that "defer" still runs.<br><br>
+
+If a function panics, any defers in that function will still run.<br>
+If that function was called by another function, defers will run in that calling function.<br>
+This goes all the way up to the main goroutine.<br>
+So if a function panics, all of the deferred items will still run.<br>
