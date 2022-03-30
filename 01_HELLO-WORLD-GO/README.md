@@ -402,3 +402,8 @@ go build -o name_of_file main.go
 ```shell
 go build -o name_of_file.exe main.go
 ```
+
+**For linux(ubuntu)**
+```shell
+env GOOS=linux GOARCH=amd64 go build -o eliza main.go
+```
