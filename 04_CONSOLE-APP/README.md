@@ -32,7 +32,7 @@ func main() {
 - it returns two things - string, error. 
 So essentially by putting underscore you're saying that "I don't care about the second thing" 
 
-2. It will replace \\r\\n with "" on any occurrence(when the last value < 0 ) (For windows)
+2. It will replace \\r\\n with "" on any occurrence(when the last value < 0 ) (For windows, this should come first)
 
 3. It will replace \\n with "" on any occurrence(when the last value < 0 ) (For mac and linux)
 
@@ -46,9 +46,13 @@ So instead of writing hundred lines of code, let's use a third-party package fro
 
 ### go get it 
 The way you install go package is different from the way you do in Python or Java.<br>
+
 **Installation:**
 
 	go get -u github.com/eiannone/keyboard
+
+The -u flag instructs 'get' to update modules providing dependencies of packages named on the command line<br>
+to use newer minor or patch releases when available.<br><br>
 
 By now, you will see go.sum is there in the project directory, the contents of which you don't want to fiddle with. And more notably,<br>
 go.mod:
@@ -115,7 +119,7 @@ func main() {
 
 6. If you get your mouse hovering over GetSingleKey, you will see the return types are Rune, keyboard.key and err. Rune literals are just 32-bit integer values. For example, the rune literal 'a' is actually the number 97.
 
-7. When you pressed Esc, return(enter) and so on, the key is not 0.
+7. When you pressed Esc, return(enter) and so on, the key is not 0 with char of them being 0. 
 
 8. keyboard.KeyEsc will detect enter key. 
 
@@ -151,3 +155,81 @@ If a function panics, any defers in that function will still run.<br>
 If that function was called by another function, defers will run in that calling function.<br>
 This goes all the way up to the main goroutine.<br>
 So if a function panics, all of the deferred items will still run.<br>
+
+
+## Changing the program
+So far, this only prints out the number of char(superset of ASCII) which is essentially a number.<br>
+Let's change it to display a "menu" that the user can choose from with a single key press. 
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"strconv"
+
+	"github.com/eiannone/keyboard"
+)
+
+func main() {
+	err := keyboard.Open() 
+	if err != nil {        
+		log.Fatal(err) 
+
+	defer func() { 
+		_ = keyboard.Close() 
+	}()
+
+	
+	coffees := make(map[int]string) // dictionary!
+	coffees[1] = "Cappucino"
+	coffees[2] = "Latte"
+	coffees[3] = "Americano"
+	coffees[4] = "Mocha"
+	coffees[5] = "Macchiato"
+	coffees[6] = "Espresso"
+
+	fmt.Println("MENU")
+	fmt.Println("----")
+	fmt.Println("1 - Cappucino")
+	fmt.Println("2 - Latte")
+	fmt.Println("3 - Americano")
+	fmt.Println("4 - Mocha")
+	fmt.Println("5 - Macchiato")
+	fmt.Println("6 - Espresso")
+	fmt.Println("Q - Quit the program") //Instead of ESC, now we are looking Q being pressed
+
+	for {
+		char, _, err := keyboard.GetSingleKey() 
+		if err != nil {
+			log.Fatal(err)
+		}
+		if char == 'q' || char == 'Q' { //2 
+			break
+		}
+
+		//How can you convert the rune to human-readable character? - By the following!
+		t := fmt.Sprintf("You chose %q", char) // This returns a string. fmt.Sprintf replaces %q with char
+		fmt.Println(t)
+
+		//What about converting string to integer?
+		i, _ := strconv.Atoi(string(char))
+		t2 := fmt.Sprintf("You chose %d", i) //placeholder for integer is 'd'
+		fmt.Println(t2)
+
+		t3 := fmt.Sprintf("You chose %s", coffees[i])
+		fmt.Println(t3)
+
+		//What if you press things that are not numeric? -> it will return 0
+
+	}
+	fmt.Println("Program exiting...")
+}
+```
+1.  maps are specialized data structure so you can't just say "var coffees = map()". Instead, you declare it:
+```go
+variable = make(map[string]int) // [type_of_key]type_of_value
+```
+
+2. Unlike python, Go distinguishes "" and ''. "" is used for string whereas '' is for rune
