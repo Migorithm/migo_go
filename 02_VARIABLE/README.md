@@ -126,10 +126,6 @@ func playTheGame(firstNumber, secondNumber, subtraction, answer int) {
 	fmt.Println("The answer is", answer)
 
 	// Different 
-	var a int
-	fmt.Scanln(&a)
-
-	fmt.Println(a)
 
 }
 

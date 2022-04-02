@@ -30,7 +30,7 @@ import (
 func main() {
 	var a, b int
 	fmt.Scan(&a, &b)
-
+	
 	start := time.Now()
 	for i := 0; i < b; i++ {
 		var buf bytes.Buffer
