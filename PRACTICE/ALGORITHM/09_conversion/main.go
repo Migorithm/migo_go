@@ -1,5 +1,7 @@
 package main
 
+//https://programmers.co.kr/learn/courses/30/lessons/12933?language=go
+
 import (
 	"fmt"
 	"log"
